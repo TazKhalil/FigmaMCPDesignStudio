@@ -142,13 +142,19 @@ export function PropertiesPanel() {
             {(() => {
               const count = getGatewaySensorCount(gateway.id, project.sensors);
               const atCapacity = count >= MAX_SENSORS_PER_GATEWAY;
+              const overCapacity = count > MAX_SENSORS_PER_GATEWAY;
               return (
                 <div
-                  className={atCapacity ? 'text-red-500' : 'text-foreground'}
-                  aria-label={`${count} of ${MAX_SENSORS_PER_GATEWAY} sensors${atCapacity ? ' — at capacity' : ''}`}
+                  className={overCapacity ? 'text-red-500' : atCapacity ? 'text-amber-500' : 'text-foreground'}
+                  aria-label={`${count} of ${MAX_SENSORS_PER_GATEWAY} sensors${overCapacity ? ' — over capacity' : atCapacity ? ' — at capacity' : ''}`}
                 >
                   {count}/{MAX_SENSORS_PER_GATEWAY}
-                  {atCapacity && <span className="ml-1 text-[11px]">(at capacity)</span>}
+                  {overCapacity && (
+                    <span className="ml-1 text-[11px] font-semibold" role="alert">— Over Capacity</span>
+                  )}
+                  {atCapacity && !overCapacity && (
+                    <span className="ml-1 text-[11px]">(at capacity)</span>
+                  )}
                 </div>
               );
             })()}

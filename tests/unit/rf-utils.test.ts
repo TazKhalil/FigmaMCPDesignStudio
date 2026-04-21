@@ -155,6 +155,24 @@ describe('autoAssignSensors', () => {
     expect(assigned.length).toBe(MAX_SENSORS_PER_GATEWAY + 1);
   });
 
+  it('overflow sensor has overCapacity: true (T033)', () => {
+    const gw = makeGateway('gw1', 0, 0);
+    // Create exactly MAX+1 sensors; the last one (farthest/worst RSSI) will overflow
+    const sensors: Sensor[] = Array.from({ length: MAX_SENSORS_PER_GATEWAY + 1 }, (_, i) =>
+      makeSensor(`s${i}`, i + 1, 0)
+    );
+    const result = autoAssignSensors(sensors, [gw], noWalls, noDoors, noObstacles, scale100);
+    const overCapacitySensors = result.filter(s => s.overCapacity === true);
+    expect(overCapacitySensors).toHaveLength(1);
+  });
+
+  it('sensors within capacity have overCapacity: false (T033)', () => {
+    const gw = makeGateway('gw1', 0, 0);
+    const sensors = [makeSensor('s1', 10, 0), makeSensor('s2', 20, 0)];
+    const result = autoAssignSensors(sensors, [gw], noWalls, noDoors, noObstacles, scale100);
+    result.forEach(s => expect(s.overCapacity).toBe(false));
+  });
+
   it('assigns each sensor with an RSSI value', () => {
     const gw = makeGateway('gw1', 0, 0);
     const sensors = [makeSensor('s1', 50, 0), makeSensor('s2', 100, 0)];

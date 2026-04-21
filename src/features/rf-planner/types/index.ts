@@ -41,6 +41,8 @@ export interface Sensor {
   groupCount: number;
   assignedGatewayId: string | null;
   rssi: number | null;
+  /** True when the sensor was assigned to a gateway that has already exceeded MAX_SENSORS_PER_GATEWAY capacity. */
+  overCapacity?: boolean;
 }
 
 export interface ScaleRef {

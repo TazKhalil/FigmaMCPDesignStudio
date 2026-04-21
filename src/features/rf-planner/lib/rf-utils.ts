@@ -132,7 +132,7 @@ export function autoAssignSensors(
   scale: ScaleRef | null,
 ): Sensor[] {
   if (!scale || gateways.length === 0) {
-    return sensors.map(s => ({ ...s, assignedGatewayId: null, rssi: null }));
+    return sensors.map(s => ({ ...s, assignedGatewayId: null, rssi: null, overCapacity: false }));
   }
 
   // Calculate RSSI for each sensor to each gateway
@@ -147,7 +147,12 @@ export function autoAssignSensors(
   // Sort by RSSI descending (best signal first)
   sensorGatewayRssi.sort((a, b) => b.rssi - a.rssi);
 
-  const result = sensors.map(s => ({ ...s, assignedGatewayId: null as string | null, rssi: null as number | null }));
+  const result = sensors.map(s => ({
+    ...s,
+    assignedGatewayId: null as string | null,
+    rssi: null as number | null,
+    overCapacity: false,
+  }));
   const gatewayLoad: Record<string, number> = {};
   gateways.forEach(g => { gatewayLoad[g.id] = 0; });
 
@@ -168,9 +173,10 @@ export function autoAssignSensors(
       }
     }
     if (!assigned && candidates.length > 0) {
-      // All at capacity, assign to best anyway and flag
+      // All gateways at capacity — assign to best-RSSI gateway anyway and flag overflow
       result[si].assignedGatewayId = candidates[0].gatewayId;
       result[si].rssi = candidates[0].rssi;
+      result[si].overCapacity = true;
     }
   }
 

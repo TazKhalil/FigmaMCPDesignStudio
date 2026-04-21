@@ -356,7 +356,7 @@ gateway label, capacity overflow indicator)
 
 ### Implementation
 
-- [ ] T033 [US5] Verify `autoAssignSensors` in worker handles capacity overflow correctly —
+- [X] T033 [US5] Verify `autoAssignSensors` in worker handles capacity overflow correctly —
   sensor assigned to best-RSSI gateway regardless when all gateways at capacity; review
   `src/features/rf-planner/workers/rf-engine.worker.ts`
   **Port from prototype file `src/app/rf-utils.ts`** (`autoAssignSensors` logic; verify
@@ -364,13 +364,13 @@ gateway label, capacity overflow indicator)
   _Acceptance_: Unit test case (from T009) for >30-sensor capacity overflow passes; sensor
   gets `assignedGatewayId` of best-RSSI gateway with `overCapacity: true` flag in result
 
-- [ ] T034 [US5] Add over-capacity indicator in `PropertiesPanel.tsx` and gateway canvas
+- [X] T034 [US5] Add over-capacity indicator in `PropertiesPanel.tsx` and gateway canvas
   render — visual badge when assigned sensor count exceeds `MAX_SENSORS_PER_GATEWAY`
   **New work** (prototype has no overflow indicator; FR-007/FR-008 require visible overflow state)
   _Acceptance_: Gateway with 31+ assigned sensors shows red capacity badge; Properties Panel
   shows "31/30 — Over Capacity" warning; keyboard-accessible (no colour-only indicator)
 
-- [ ] T035 [US5] Validate `REASSIGN_SENSORS` action in Zustand store triggers worker `RECALC`
+- [X] T035 [US5] Validate `REASSIGN_SENSORS` action in Zustand store triggers worker `RECALC`
   immediately (not debounced) — verify `useRfEngine.ts` debounce bypass on explicit reassign
   **Refactor prototype file `src/app/store.tsx`** / `src/features/rf-planner/hooks/useRfEngine.ts`
   _Acceptance_: `store.dispatch({ type: 'REASSIGN_SENSORS' })` triggers immediate `RECALC`

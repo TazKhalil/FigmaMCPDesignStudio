@@ -83,6 +83,7 @@ self.addEventListener('message', (e: MessageEvent<RecalcMessage>) => {
           id:                s.id,
           assignedGatewayId: s.assignedGatewayId,
           rssi:              s.rssi,
+          overCapacity:      s.overCapacity ?? false,
         })),
         polygons,
       },

@@ -621,9 +621,11 @@ export const Canvas = forwardRef<CanvasHandle>((_, ref) => {
       ctx.textBaseline = 'top';
       ctx.fillText(gw.label, gw.x, gw.y + gwSize / 2 + 4 / zoom);
       const count = getGatewaySensorCount(gw.id, project.sensors);
+      const overCapacity = count > MAX_SENSORS_PER_GATEWAY;
       const atCapacity = count >= MAX_SENSORS_PER_GATEWAY;
+      // T034: red badge for over-capacity, amber for exactly-at-capacity, indigo otherwise
       const badgeText = `${count}/${MAX_SENSORS_PER_GATEWAY}`;
-      ctx.fillStyle = atCapacity ? '#ef4444' : '#6366f1';
+      ctx.fillStyle = overCapacity ? '#ef4444' : atCapacity ? '#f59e0b' : '#6366f1';
       ctx.font = `bold ${9 / zoom}px sans-serif`;
       const bw = ctx.measureText(badgeText).width + 8 / zoom;
       ctx.beginPath();

@@ -139,7 +139,7 @@ export interface RFPlannerState {
 
   /** Apply worker RECALC_RESULT: update sensor RSSI/assignment + coverage polygons (no history entry). */
   setRecalcResult: (
-    sensors: { id: string; assignedGatewayId: string | null; rssi: number | null }[],
+    sensors: { id: string; assignedGatewayId: string | null; rssi: number | null; overCapacity: boolean }[],
     polygons: RFPlannerState['coveragePolygons'],
   ) => void;
 }
@@ -232,7 +232,7 @@ export const useRFPlannerStore = create<RFPlannerState>((set, get) => ({
     const { project } = get();
     const updatedSensors = project.sensors.map(s => {
       const r = sensorResults.find(sr => sr.id === s.id);
-      return r ? { ...s, assignedGatewayId: r.assignedGatewayId, rssi: r.rssi } : s;
+      return r ? { ...s, assignedGatewayId: r.assignedGatewayId, rssi: r.rssi, overCapacity: r.overCapacity } : s;
     });
     set({
       project: { ...project, sensors: updatedSensors },

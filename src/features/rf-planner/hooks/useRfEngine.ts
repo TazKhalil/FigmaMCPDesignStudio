@@ -26,7 +26,7 @@ import type { ProjectState } from '@/features/rf-planner/types';
 // ─── Types matching worker-protocol.md ───────────────────────────────────────
 
 interface RecalcResultPayload {
-  sensors: { id: string; assignedGatewayId: string | null; rssi: number | null }[];
+  sensors: { id: string; assignedGatewayId: string | null; rssi: number | null; overCapacity: boolean }[];
   polygons: {
     gatewayId: string;
     good: { x: number; y: number }[];
