@@ -197,4 +197,31 @@ describe('useRFPlannerStore', () => {
       expect(useRFPlannerStore.getState().coveragePolygons).toHaveLength(0);
     });
   });
+
+  describe('SET_NAME (T043)', () => {
+    it('updates the project name', () => {
+      useRFPlannerStore.getState().dispatch({ type: 'SET_NAME', name: 'Warehouse Plan A' });
+      expect(useRFPlannerStore.getState().project.name).toBe('Warehouse Plan A');
+    });
+
+    it('updates dateModified on rename', () => {
+      const before = useRFPlannerStore.getState().project.dateModified;
+      const t = Date.now();
+      while (Date.now() - t < 2) { /* spin */ }
+      useRFPlannerStore.getState().dispatch({ type: 'SET_NAME', name: 'New Name' });
+      const after = useRFPlannerStore.getState().project.dateModified;
+      expect(after).not.toBe(before);
+    });
+
+    it('name persists in saved JSON round-trip (T043 + T036)', () => {
+      useRFPlannerStore.getState().dispatch({ type: 'SET_NAME', name: 'Round-Trip Name' });
+      const { project } = useRFPlannerStore.getState();
+      // Simulate the save payload including version
+      const payload = { version: '1.0.0', ...project };
+      const json = JSON.stringify(payload);
+      const parsed = JSON.parse(json);
+      expect(parsed.name).toBe('Round-Trip Name');
+      expect(parsed.version).toBe('1.0.0');
+    });
+  });
 });

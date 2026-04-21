@@ -1,19 +1,19 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { Canvas, CanvasHandle } from '../components/Canvas';
 import { Toolbar } from '../components/Toolbar';
 import { PropertiesPanel } from '../components/PropertiesPanel';
 import { StatusBar } from '../components/StatusBar';
 import { useRFPlannerStore } from '@/stores/rf-planner.store';
 import { useRfEngine } from '../hooks/useRfEngine';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 /**
  * Route-level shell for the RF Coverage Planner.
  * Extracted from prototype src/app/App.tsx AppInner.
- * PropertiesPanel (Phase 4) and StatusBar (Phase 6) will be wired here.
  */
 export default function RFPlannerPage() {
   const canvasRef = useRef<CanvasHandle>(null);
-  const { project, isDark } = useRFPlannerStore();
+  const { project, isDark, dispatch } = useRFPlannerStore();
 
   // Start the RF engine worker — subscribes to store and keeps coveragePolygons up to date
   useRfEngine();
@@ -22,6 +22,28 @@ export default function RFPlannerPage() {
   React.useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
+
+  // T043: editable project name state
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+
+  const startEdit = useCallback(() => {
+    setNameInput(project.name);
+    setEditingName(true);
+  }, [project.name]);
+
+  const commitName = useCallback(() => {
+    const trimmed = nameInput.trim();
+    if (trimmed && trimmed !== project.name) {
+      dispatch({ type: 'SET_NAME', name: trimmed });
+    }
+    setEditingName(false);
+  }, [nameInput, project.name, dispatch]);
+
+  const handleNameKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') { e.currentTarget.blur(); }
+    if (e.key === 'Escape') { setEditingName(false); }
+  }, []);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-background text-foreground overflow-hidden">
@@ -34,7 +56,30 @@ export default function RFPlannerPage() {
           >
             P
           </div>
-          <span className="text-[15px] tracking-tight">Perceptiv RF Coverage Planner</span>
+          <span className="text-[13px] text-muted-foreground tracking-tight select-none">Perceptiv</span>
+          <span className="text-muted-foreground select-none" aria-hidden="true">/</span>
+          {/* T043: click-to-edit project name */}
+          {editingName ? (
+            <input
+              type="text"
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              onBlur={commitName}
+              onKeyDown={handleNameKeyDown}
+              aria-label="Project name"
+              autoFocus
+              className="text-[15px] tracking-tight bg-transparent border-b border-indigo-500 outline-none text-foreground min-w-0 w-48"
+            />
+          ) : (
+            <button
+              onClick={startEdit}
+              aria-label={`Project name: ${project.name}. Click to rename.`}
+              title="Click to rename project"
+              className="text-[15px] tracking-tight text-foreground hover:text-indigo-500 transition-colors bg-transparent border-none cursor-pointer p-0"
+            >
+              {project.name}
+            </button>
+          )}
         </div>
         <div className="flex-1" />
         <span className="text-[11px] text-muted-foreground">v1.0</span>
@@ -51,8 +96,11 @@ export default function RFPlannerPage() {
       />
 
       {/* Main area */}
+      {/* T042: ErrorBoundary wraps Canvas specifically so a canvas crash doesn't kill the full UI */}
       <div className="flex flex-1 overflow-hidden">
-        <Canvas ref={canvasRef} />
+        <ErrorBoundary label="Canvas">
+          <Canvas ref={canvasRef} />
+        </ErrorBoundary>
         <PropertiesPanel />
       </div>
 

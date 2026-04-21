@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 // Lazy-loaded RF Planner feature chunk (Phase 9 will flesh this out)
 const RFPlannerPage = React.lazy(
@@ -18,5 +19,9 @@ const router = createBrowserRouter([
 ])
 
 export default function App() {
-  return <RouterProvider router={router} />
+  return (
+    <ErrorBoundary label="App">
+      <RouterProvider router={router} />
+    </ErrorBoundary>
+  )
 }

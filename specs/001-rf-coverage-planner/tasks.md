@@ -441,7 +441,7 @@ error boundaries protect both app and canvas levels.
 `AppInner`, dark mode toggle), `src/app/store.tsx` (`SET_NAME` action — wired in reducer
 but never dispatched in prototype)
 
-- [ ] T041 Implement `src/App.tsx` — `RouterProvider` with `createBrowserRouter` (single `/`
+- [X] T041 Implement `src/App.tsx` — `RouterProvider` with `createBrowserRouter` (single `/`
   route, lazy-loads `RFPlannerPage`), Perceptiv header chrome, dark mode toggle button,
   version badge, global `<ErrorBoundary>`
   **Refactor prototype file `src/app/App.tsx`** (split header/routing into App.tsx; canvas
@@ -449,20 +449,20 @@ but never dispatched in prototype)
   _Acceptance_: Navigating to `/` loads RF Planner; `<ErrorBoundary>` catches thrown error
   without crashing full app; lazy chunk in Network tab shows separate bundle
 
-- [ ] T042 Implement `src/features/rf-planner/pages/RFPlannerPage.tsx` — lazy-loaded route
+- [X] T042 Implement `src/features/rf-planner/pages/RFPlannerPage.tsx` — lazy-loaded route
   component composing `Canvas`, `Toolbar`, `PropertiesPanel`, `StatusBar`, `useRfEngine`
   **Refactor prototype file `src/app/App.tsx`** (`AppInner` extracted to this component)
   _Acceptance_: RFPlannerPage renders all 4 sub-components; builds as a separate Vite chunk;
   `<ErrorBoundary>` wraps Canvas specifically
 
-- [ ] T043 Implement editable project name in header — inline click-to-edit `<input>` that
+- [X] T043 Implement editable project name in header — inline click-to-edit `<input>` that
   dispatches `SET_NAME` on blur/Enter; displays project name from `store.project.name`
   **New work** (FR-021; `SET_NAME` action exists in prototype `src/app/store.tsx` but no UI
   calls it — flagged as P6 in Prototype Reconciliation)
   _Acceptance_: Clicking project name in header makes it editable; pressing Enter saves;
   name appears in saved JSON; keyboard-accessible (Tab → Enter pattern)
 
-- [ ] T044 [P] Confirm dark mode toggle wires correctly to Zustand `toggleDark` and
+- [X] T044 [P] Confirm dark mode toggle wires correctly to Zustand `toggleDark` and
   `StorageAdapter.saveTheme`; verify `dark` class applied to `<html>` on toggle and persisted
   **Refactor prototype file `src/app/App.tsx`** (dark mode toggle exists; wire to Zustand
   instead of local state)
