@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { ProjectState } from '@/features/rf-planner/types';
-import { saveProject, loadProject, saveTheme, loadTheme } from '@/features/rf-planner/lib/storage';
+import { saveProject, loadProject, clearProject, saveTheme, loadTheme } from '@/features/rf-planner/lib/storage';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -105,5 +105,31 @@ describe('saveTheme / loadTheme', () => {
 
   it('returns null when no theme saved', () => {
     expect(loadTheme()).toBeNull();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// T040 — clearProject
+// ─────────────────────────────────────────────────────────────────────────────
+describe('clearProject (T040)', () => {
+  beforeEach(() => {
+    localStorageMock.clear();
+    localStorageMock.removeItem.mockClear();
+  });
+
+  it('removes project so loadProject returns null', () => {
+    saveProject(makeProject());
+    clearProject();
+    expect(loadProject()).toBeNull();
+  });
+
+  it('calls localStorage.removeItem with the project key', () => {
+    clearProject();
+    expect(localStorageMock.removeItem).toHaveBeenCalledOnce();
+  });
+
+  it('is safe to call when nothing is saved', () => {
+    expect(() => clearProject()).not.toThrow();
+    expect(loadProject()).toBeNull();
   });
 });

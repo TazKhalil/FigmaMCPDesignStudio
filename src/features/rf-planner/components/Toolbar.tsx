@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import {
   MousePointer2, Pen, Square, Radio, Disc, Ruler,
   Undo2, Redo2, ZoomIn, ZoomOut, Maximize, Save, FolderOpen,
-  Download, Sun, Moon, FileText, Image as ImageIcon,
+  Download, Sun, Moon, FileText, Image as ImageIcon, FilePlus,
 } from 'lucide-react';
 import { useRFPlannerStore } from '@/stores/rf-planner.store';
 import { ToolMode, WallMaterial, ObstacleType, WALL_MATERIALS, OBSTACLE_TYPES } from '@/features/rf-planner/types';
@@ -23,7 +23,7 @@ export function Toolbar({
     tool, setTool, wallMaterial, setWallMaterial,
     obstacleType, setObstacleType,
     isDark, toggleDark, undo, redo, canUndo, canRedo,
-    project, dispatch, setSelectedId,
+    project, dispatch, setSelectedId, resetProject,
   } = useRFPlannerStore();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -75,12 +75,14 @@ export function Toolbar({
   };
 
   const handleSave = () => {
-    const json = JSON.stringify(project, null, 2);
+    // T036: include schema version for forward-compat (save-format.md v1.0.0)
+    const payload = { version: '1.0.0', ...project };
+    const json = JSON.stringify(payload, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${project.name.replace(/\s+/g, '_')}.json`;
+    a.download = `${project.name.replace(/\s+/g, '_')}_project.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -91,15 +93,40 @@ export function Toolbar({
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        const proj = JSON.parse(reader.result as string);
+        const data = JSON.parse(reader.result as string);
+        // T037: validate required top-level keys per save-format.md
+        if (
+          !data ||
+          typeof data !== 'object' ||
+          Array.isArray(data) ||
+          !('name' in data) ||
+          !('dateCreated' in data) ||
+          !('walls' in data) ||
+          !('gateways' in data) ||
+          !('sensors' in data)
+        ) {
+          alert('Invalid project file: missing required fields.');
+          return;
+        }
+        // Strip file-metadata fields not part of ProjectState
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { version: _v, savedAt: _s, ...proj } = data;
         dispatch({ type: 'SET_PROJECT', project: proj });
+        // T037: trigger immediate REASSIGN_SENSORS per save-format.md §Load Behaviour
+        dispatch({ type: 'REASSIGN_SENSORS' });
         setSelectedId(null);
       } catch {
-        alert('Invalid project file');
+        alert('Invalid project file: could not parse JSON.');
       }
     };
     reader.readAsText(file);
     e.target.value = '';
+  };
+
+  const handleNewProject = () => {
+    if (!window.confirm('Start a new project? Unsaved changes will be lost.')) return;
+    resetProject();
+    setSelectedId(null);
   };
 
   const btnClass = (active: boolean) =>
@@ -131,6 +158,14 @@ export function Toolbar({
         onChange={handleLoad}
         aria-hidden="true"
       />
+      <button
+        className={iconBtn}
+        onClick={handleNewProject}
+        aria-label="New project"
+        title="New Project"
+      >
+        <FilePlus size={18} />
+      </button>
       <button
         className={iconBtn}
         onClick={() => fileInputRef.current?.click()}

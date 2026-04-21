@@ -4,6 +4,7 @@ import {
   Wall, Door, Obstacle, Gateway, Sensor, ScaleRef, Point, ProjectAction,
 } from '@/features/rf-planner/types';
 import { autoAssignSensors } from '@/features/rf-planner/lib/rf-utils';
+import { saveProject, loadProject, clearProject } from '@/features/rf-planner/lib/storage';
 
 let idCounter = 0;
 export function genId(): string { return `obj_${++idCounter}_${Date.now()}`; }
@@ -137,6 +138,9 @@ export interface RFPlannerState {
   }[];
   setCoveragePolygons: (polygons: RFPlannerState['coveragePolygons']) => void;
 
+  /** Reset to a blank project and clear auto-saved localStorage state (T040). */
+  resetProject: () => void;
+
   /** Apply worker RECALC_RESULT: update sensor RSSI/assignment + coverage polygons (no history entry). */
   setRecalcResult: (
     sensors: { id: string; assignedGatewayId: string | null; rssi: number | null; overCapacity: boolean }[],
@@ -147,7 +151,8 @@ export interface RFPlannerState {
 const HISTORY_LIMIT = 100;
 
 export const useRFPlannerStore = create<RFPlannerState>((set, get) => ({
-  project: defaultProject(),
+  // T040: restore last auto-saved project on app load; fall back to blank project
+  project: (typeof localStorage !== 'undefined' ? loadProject() : null) ?? defaultProject(),
   _history: [],
   _future: [],
   coveragePolygons: [],
@@ -228,6 +233,19 @@ export const useRFPlannerStore = create<RFPlannerState>((set, get) => ({
 
   setCoveragePolygons: (polygons) => set({ coveragePolygons: polygons }),
 
+  resetProject() {
+    clearProject();
+    set({
+      project: defaultProject(),
+      _history: [],
+      _future: [],
+      canUndo: false,
+      canRedo: false,
+      selectedId: null,
+      coveragePolygons: [],
+    });
+  },
+
   setRecalcResult(sensorResults, polygons) {
     const { project } = get();
     const updatedSensors = project.sensors.map(s => {
@@ -247,3 +265,16 @@ export type {
   ToolMode, WallMaterial, ObstacleType, ProjectState, ScaleInputUnit,
   Wall, Door, Obstacle, Gateway, Sensor, ScaleRef, Point, ProjectAction,
 };
+
+/**
+ * Wire up auto-save: saves project to localStorage on every mutation.
+ * Call once from the app entry point (main.tsx). Not called in tests.
+ * Returns the unsubscribe function.
+ */
+export function initAutoSave(): () => void {
+  return useRFPlannerStore.subscribe((state, prevState) => {
+    if (state.project !== prevState.project) {
+      saveProject(state.project);
+    }
+  });
+}

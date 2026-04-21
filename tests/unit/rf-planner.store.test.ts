@@ -167,4 +167,34 @@ describe('useRFPlannerStore', () => {
       expect(useRFPlannerStore.getState().scaleInputUnit).toBe('ft');
     });
   });
+
+  describe('resetProject (T040)', () => {
+    it('clears all gateways and sensors', () => {
+      useRFPlannerStore.getState().dispatch({ type: 'ADD_GATEWAY', gateway: { id: 'gw1', x: 0, y: 0, label: 'GW' } });
+      useRFPlannerStore.getState().resetProject();
+      const { project } = useRFPlannerStore.getState();
+      expect(project.gateways).toHaveLength(0);
+      expect(project.sensors).toHaveLength(0);
+    });
+
+    it('resets project name to Untitled Project', () => {
+      useRFPlannerStore.getState().dispatch({ type: 'SET_NAME', name: 'My Plan' });
+      useRFPlannerStore.getState().resetProject();
+      expect(useRFPlannerStore.getState().project.name).toBe('Untitled Project');
+    });
+
+    it('resets undo/redo history', () => {
+      useRFPlannerStore.getState().dispatch({ type: 'ADD_GATEWAY', gateway: { id: 'gw1', x: 0, y: 0, label: 'GW' } });
+      expect(useRFPlannerStore.getState().canUndo).toBe(true);
+      useRFPlannerStore.getState().resetProject();
+      expect(useRFPlannerStore.getState().canUndo).toBe(false);
+      expect(useRFPlannerStore.getState().canRedo).toBe(false);
+    });
+
+    it('clears coveragePolygons', () => {
+      useRFPlannerStore.setState({ coveragePolygons: [{ gatewayId: 'gw1', good: [], marginal: [], ringRadii: { goodRadius: 10, marginalRadius: 20 } }] });
+      useRFPlannerStore.getState().resetProject();
+      expect(useRFPlannerStore.getState().coveragePolygons).toHaveLength(0);
+    });
+  });
 });

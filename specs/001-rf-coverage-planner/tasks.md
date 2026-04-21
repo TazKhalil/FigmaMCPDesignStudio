@@ -394,28 +394,28 @@ counts identical to pre-save; CSV download has correct row count and headers.
 
 ### Implementation
 
-- [ ] T036 [US6] Implement Save JSON in `Toolbar.tsx` — serialize `store.project` to JSON
+- [X] T036 [US6] Implement Save JSON in `Toolbar.tsx` — serialize `store.project` to JSON
   Blob (schema per `contracts/save-format.md`), trigger download via `<a>` click,
   include project name and `savedAt` timestamp
   **Refactor prototype file `src/app/components/Toolbar.tsx`** (`handleSave` exists; update
   serialization to match `save-format.md` v1.0.0 schema)
   _Acceptance_: Save button downloads `.json`; file contains all entity arrays and `version: "1.0.0"`
 
-- [ ] T037 [US6] Implement Load JSON in `Toolbar.tsx` — file picker, `JSON.parse` in
+- [X] T037 [US6] Implement Load JSON in `Toolbar.tsx` — file picker, `JSON.parse` in
   `try/catch`, dispatch `SET_PROJECT`, immediately trigger `RECALC` via worker hook
   **Refactor prototype file `src/app/components/Toolbar.tsx`** (`handleLoad` exists; wrap
   with proper error handling; trigger recalc on load)
   _Acceptance_: Load button restores all project data; RSSI values identical to saved state
   (SC-004); corrupt JSON shows error toast, does not corrupt store
 
-- [ ] T038 [US6] Implement Export PNG in `Canvas.tsx` — `canvas.toDataURL('image/png')`,
+- [X] T038 [US6] Implement Export PNG in `Canvas.tsx` — `canvas.toDataURL('image/png')`,
   trigger download
   **Port from prototype file `src/app/components/Canvas.tsx`** (`exportPng` exists;
   wire to Toolbar button in production)
   _Acceptance_: Export PNG button downloads PNG of current canvas state including floor plan,
   walls, devices, and coverage polygons
 
-- [ ] T039 [US6] Implement Export CSV in `Canvas.tsx` — generate CSV with columns: sensor
+- [X] T039 [US6] Implement Export CSV in `Canvas.tsx` — generate CSV with columns: sensor
   label, assigned gateway label, RSSI (dBm), signal tier (good/marginal/poor), group count;
   include summary block (gateway count, sensor count, coverage %)
   **Port from prototype file `src/app/components/Canvas.tsx`** (`exportCsv` exists; verify
@@ -423,7 +423,7 @@ counts identical to pre-save; CSV download has correct row count and headers.
   _Acceptance_: CSV downloads; contains 1 header row + 1 row per sensor; all 5 required
   columns present; summary block at bottom
 
-- [ ] T040 [US6] Extend `storage.ts` `StorageAdapter` to auto-save `project` to localStorage
+- [X] T040 [US6] Extend `storage.ts` `StorageAdapter` to auto-save `project` to localStorage
   on every store mutation, and restore on app load
   **New work** (prototype has no auto-save; `handleSave` is manual only)
   _Acceptance_: Refreshing the page restores the last project state; new project clears storage

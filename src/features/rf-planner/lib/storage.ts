@@ -19,6 +19,11 @@ export function loadProject(): ProjectState | null {
   }
 }
 
+/** Remove the auto-saved project from localStorage (T040 — new project clears storage). */
+export function clearProject(): void {
+  localStorage.removeItem(PROJECT_KEY);
+}
+
 export function saveTheme(theme: 'dark' | 'light'): void {
   localStorage.setItem(THEME_KEY, theme);
 }
