@@ -78,6 +78,12 @@
 ## Requirements *(mandatory)*
 
 <!--
+  IMPORTANT (Principle I — Figma Make Authoritative Reference):
+  For any feature with a UI component, the Figma MCP (get_design_context) MUST be called
+  to retrieve the current prototype source BEFORE writing functional requirements for those
+  UI elements. Requirements that describe UI behavior or visual presentation MUST reference
+  what is observable in the prototype source, not invent new patterns.
+
   ACTION REQUIRED: The content in this section represents placeholders.
   Fill them out with the right functional requirements.
 -->

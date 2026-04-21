@@ -31,7 +31,30 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+**Principle I — Figma Make Authoritative Reference**
+- [ ] Figma MCP (`get_design_context`) called for every UI component in scope?
+- [ ] No colors, typography, spacing, or component structures invented outside the prototype?
+- [ ] Any prototype-vs-request conflict flagged (not silently resolved)?
+
+**Principle II — Production-Quality Uplift Only**
+- [ ] No unrequested features or design changes included?
+- [ ] Prototype visual fidelity preserved?
+- [ ] All complexity justified by a specific production need?
+
+**Principle III — Accessibility**
+- [ ] All new interactive elements keyboard-navigable?
+- [ ] ARIA labels / roles added where needed?
+- [ ] Color contrast verified (WCAG 2.1 AA)?
+
+**Principle IV — Test-Driven Engineering**
+- [ ] Tests written (or planned) before implementation for complex logic?
+- [ ] Unit tests (Vitest + RTL) scoped for all new business logic?
+- [ ] Playwright E2E tests scoped for all critical user flows touched?
+
+**Principle V — Performance-Conscious Architecture**
+- [ ] Any computation > 16ms identified and moved to a Web Worker?
+- [ ] New lazy-loaded entry points identified if feature modules are added?
+- [ ] Bundle size impact assessed?
 
 ## Project Structure
 

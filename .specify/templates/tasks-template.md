@@ -69,6 +69,14 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T008 Configure error handling and logging infrastructure
 - [ ] T009 Setup environment configuration management
 
+**Accessibility infrastructure (Principle III — required for UI features):**
+- [ ] TXXX Verify all interactive base components have keyboard nav and visible focus rings
+- [ ] TXXX Add ARIA landmark regions to shell layout (header, main, aside, status)
+
+**Performance infrastructure (Principle V — required if compute-heavy features present):**
+- [ ] TXXX Configure Web Worker scaffolding if heavy compute is in scope (>16ms budget)
+- [ ] TXXX Configure lazy-loading for feature-module entry points
+
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
 ---
@@ -156,6 +164,8 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
 - [ ] TXXX Security hardening
 - [ ] TXXX Run quickstart.md validation
+- [ ] TXXX **Accessibility audit** — keyboard nav, ARIA, contrast (Principle III)
+- [ ] TXXX **Prototype fidelity review** — confirm no visual drift from Figma Make source (Principle I)
 
 ---
 
