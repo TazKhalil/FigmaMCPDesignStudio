@@ -7,7 +7,7 @@ import {
   getRssiColor, getRssiTier, MAX_SENSORS_PER_GATEWAY,
 } from '@/features/rf-planner/types';
 import {
-  getPixelsPerFoot, getGatewaySensorCount, getGatewayCoveragePolygon, getRingRadii,
+  getPixelsPerFoot, getGatewaySensorCount, getRingRadii,
 } from '@/features/rf-planner/lib/rf-utils';
 import gatewayImgSrc from '@/assets/gateway.png';
 import sensorImgSrc from '@/assets/sensor.png';
@@ -43,7 +43,7 @@ export const Canvas = forwardRef<CanvasHandle>((_, ref) => {
     project, dispatch, tool, setTool,
     wallMaterial, obstacleType, selectedId, setSelectedId,
     isDark, scaleInputUnit, setScaleInputUnit,
-    undo, redo,
+    undo, redo, coveragePolygons,
   } = useRFPlannerStore();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -424,20 +424,29 @@ export const Canvas = forwardRef<CanvasHandle>((_, ref) => {
       ctx.restore();
     }
 
-    // Coverage heatmap (3-zone polygon approach)
-    if (project.scale && project.gateways.length > 0) {
-      const selectedGw = project.gateways.find(g => g.id === selectedId);
-      const gwsToRender = selectedGw ? [selectedGw] : project.gateways;
-
-      const strokePoly = (target: CanvasRenderingContext2D, poly: Point[], color: string, width: number) => {
-        if (poly.length < 3) return;
-        target.strokeStyle = color;
-        target.lineWidth = width;
+    // Coverage heatmap — polygons from RF engine worker (T030)
+    // Worker populates store.coveragePolygons asynchronously after each project mutation.
+    // Falls back to empty (no polygons) before first worker response or when scale is null.
+    if (project.scale && coveragePolygons.length > 0) {
+      const fillPoly = (
+        target: CanvasRenderingContext2D,
+        points: { x: number; y: number }[],
+        fillStyle: string,
+        cx: number,
+        cy: number,
+        radius: number,
+      ) => {
+        if (points.length < 3) return;
+        const grad = target.createRadialGradient(cx, cy, 0, cx, cy, Math.max(radius, 1));
+        const base = fillStyle;
+        grad.addColorStop(0, base);
+        grad.addColorStop(1, base);
+        target.fillStyle = grad;
         target.beginPath();
-        target.moveTo(poly[0].x, poly[0].y);
-        for (let i = 1; i < poly.length; i++) target.lineTo(poly[i].x, poly[i].y);
+        target.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) target.lineTo(points[i].x, points[i].y);
         target.closePath();
-        target.stroke();
+        target.fill();
       };
 
       const offscreen = document.createElement('canvas');
@@ -448,70 +457,34 @@ export const Canvas = forwardRef<CanvasHandle>((_, ref) => {
       oc.translate(panOffset.x, panOffset.y);
       oc.scale(zoom, zoom);
 
-      for (const gw of gwsToRender) {
-        const polyRed = getGatewayCoveragePolygon(gw, project.walls, project.doors, project.obstacles, project.scale, -85);
-        const polyYellow = getGatewayCoveragePolygon(gw, project.walls, project.doors, project.obstacles, project.scale, -80);
-        const polyGreen = getGatewayCoveragePolygon(gw, project.walls, project.doors, project.obstacles, project.scale, -70);
+      for (const cp of coveragePolygons) {
+        const gw = project.gateways.find(g => g.id === cp.gatewayId);
+        if (!gw) continue;
 
-        const polyRadius = (poly: Point[]) => {
-          let maxR = 0;
-          for (const p of poly) {
-            const r = Math.sqrt((p.x - gw.x) ** 2 + (p.y - gw.y) ** 2);
-            if (r > maxR) maxR = r;
-          }
-          return maxR || 100;
-        };
+        // Marginal zone (amber) drawn first so green zone appears on top
+        const margR = cp.ringRadii?.marginalRadius ?? 60;
+        fillPoly(oc, cp.marginal, 'rgba(245,158,11,0.25)', gw.x, gw.y, margR);
 
-        const redR = polyRadius(polyRed);
-        const yellowR = polyRadius(polyYellow);
-        const greenR = polyRadius(polyGreen);
+        // Good zone (green)
+        const goodR = cp.ringRadii?.goodRadius ?? 40;
+        fillPoly(oc, cp.good, 'rgba(34,197,94,0.25)', gw.x, gw.y, goodR);
 
-        if (polyRed.length >= 3) {
-          const grad = oc.createRadialGradient(gw.x, gw.y, 0, gw.x, gw.y, redR);
-          grad.addColorStop(0, 'rgba(220, 38, 38, 1)');
-          grad.addColorStop(0.5, 'rgba(220, 38, 38, 0.7)');
-          grad.addColorStop(1, 'rgba(220, 38, 38, 0.2)');
-          oc.fillStyle = grad;
+        // Outline the good polygon
+        if (cp.good.length >= 3) {
+          oc.strokeStyle = 'rgba(34,197,94,0.5)';
+          oc.lineWidth = 1.5 / zoom;
+          oc.setLineDash([]);
           oc.beginPath();
-          oc.moveTo(polyRed[0].x, polyRed[0].y);
-          for (let i = 1; i < polyRed.length; i++) oc.lineTo(polyRed[i].x, polyRed[i].y);
+          oc.moveTo(cp.good[0].x, cp.good[0].y);
+          for (let i = 1; i < cp.good.length; i++) oc.lineTo(cp.good[i].x, cp.good[i].y);
           oc.closePath();
-          oc.fill();
+          oc.stroke();
         }
-
-        if (polyYellow.length >= 3) {
-          const grad = oc.createRadialGradient(gw.x, gw.y, 0, gw.x, gw.y, yellowR);
-          grad.addColorStop(0, 'rgba(234, 179, 8, 1)');
-          grad.addColorStop(0.5, 'rgba(234, 179, 8, 0.7)');
-          grad.addColorStop(1, 'rgba(234, 179, 8, 0.2)');
-          oc.fillStyle = grad;
-          oc.beginPath();
-          oc.moveTo(polyYellow[0].x, polyYellow[0].y);
-          for (let i = 1; i < polyYellow.length; i++) oc.lineTo(polyYellow[i].x, polyYellow[i].y);
-          oc.closePath();
-          oc.fill();
-        }
-
-        if (polyGreen.length >= 3) {
-          const grad = oc.createRadialGradient(gw.x, gw.y, 0, gw.x, gw.y, greenR);
-          grad.addColorStop(0, 'rgba(22, 163, 74, 1)');
-          grad.addColorStop(0.5, 'rgba(22, 163, 74, 0.7)');
-          grad.addColorStop(1, 'rgba(22, 163, 74, 0.2)');
-          oc.fillStyle = grad;
-          oc.beginPath();
-          oc.moveTo(polyGreen[0].x, polyGreen[0].y);
-          for (let i = 1; i < polyGreen.length; i++) oc.lineTo(polyGreen[i].x, polyGreen[i].y);
-          oc.closePath();
-          oc.fill();
-        }
-
-        strokePoly(oc, polyYellow, '#000000', 2.5 / zoom);
-        strokePoly(oc, polyGreen, '#000000', 2.5 / zoom);
       }
 
       ctx.save();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.globalAlpha = 0.8;
+      ctx.globalAlpha = 0.85;
       ctx.drawImage(offscreen, 0, 0);
       ctx.restore();
     }
@@ -836,7 +809,8 @@ export const Canvas = forwardRef<CanvasHandle>((_, ref) => {
     ctx.lineWidth = 1.5;
     ctx.strokeRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
   }, [project, zoom, panOffset, isDark, floorPlanImg, selectedId, tool, wallMaterial,
-      obstacleType, drawStart, drawEnd, scaleP1, scaleP2, showScaleDialog, gwImg, sensorImg]);
+      obstacleType, drawStart, drawEnd, scaleP1, scaleP2, showScaleDialog, gwImg, sensorImg,
+      coveragePolygons]);
 
   // Resize observer
   useEffect(() => {

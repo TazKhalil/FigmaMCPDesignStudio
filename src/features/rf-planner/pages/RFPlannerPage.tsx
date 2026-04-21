@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Canvas, CanvasHandle } from '../components/Canvas';
 import { Toolbar } from '../components/Toolbar';
 import { PropertiesPanel } from '../components/PropertiesPanel';
+import { StatusBar } from '../components/StatusBar';
 import { useRFPlannerStore } from '@/stores/rf-planner.store';
 import { useRfEngine } from '../hooks/useRfEngine';
 
@@ -57,39 +58,6 @@ export default function RFPlannerPage() {
 
       {/* StatusBar */}
       <StatusBar projectName={project.name} />
-    </div>
-  );
-}
-
-function StatusBar({ projectName }: { projectName: string }) {
-  const { project, tool } = useRFPlannerStore();
-  const totalSensors = project.sensors.reduce((a, b) => a + b.groupCount, 0);
-  const good = project.sensors.filter(s => s.rssi !== null && s.rssi >= -70).length;
-  const marginal = project.sensors.filter(
-    s => s.rssi !== null && s.rssi < -70 && s.rssi >= -80
-  ).length;
-  const poor = project.sensors.filter(s => s.rssi !== null && s.rssi < -80).length;
-
-  return (
-    <div
-      className="flex items-center gap-4 px-4 py-1 border-t border-border bg-card text-[11px] text-muted-foreground shrink-0"
-      role="status"
-      aria-live="polite"
-      aria-label="Project status"
-    >
-      <span>Mode: <span className="text-foreground capitalize">{tool.replace('-', ' ')}</span></span>
-      <span>Gateways: {project.gateways.length}</span>
-      <span>Sensor Points: {project.sensors.length} ({totalSensors} total)</span>
-      {project.sensors.length > 0 && (
-        <>
-          <span className="text-green-500">{good} Good</span>
-          <span className="text-yellow-500">{marginal} Marginal</span>
-          <span className="text-red-500">{poor} Poor</span>
-        </>
-      )}
-      <span>Scale: {project.scale ? `${project.scale.distanceFeet.toFixed(1)} ft ref` : 'Not set'}</span>
-      <div className="flex-1" />
-      <span>{projectName}</span>
     </div>
   );
 }

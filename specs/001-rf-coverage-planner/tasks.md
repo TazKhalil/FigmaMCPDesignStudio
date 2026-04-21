@@ -316,7 +316,7 @@ polygon boundary visibly closer to gateway on the wall side vs. open side.
 
 ### Implementation
 
-- [ ] T030 [US4] Implement coverage polygon rendering in `Canvas.tsx` — draw filled polygon
+- [X] T030 [US4] Implement coverage polygon rendering in `Canvas.tsx` — draw filled polygon
   per gateway per tier (good: `rgba(34,197,94,0.25)`, marginal: `rgba(245,158,11,0.25)`,
   poor: `rgba(239,68,68,0.2)`) from `store.coveragePolygons` returned by worker
   **Refactor prototype file `src/app/components/Canvas.tsx`** (polygon rendering logic
@@ -324,14 +324,14 @@ polygon boundary visibly closer to gateway on the wall side vs. open side.
   _Acceptance_: Gateway placed with walls → three coloured polygon regions visible; polygon
   indented correctly on wall side (manual visual inspection + canvas snapshot test)
 
-- [ ] T031 [US4] Extract and implement `src/features/rf-planner/components/StatusBar.tsx` —
+- [X] T031 [US4] Extract and implement `src/features/rf-planner/components/StatusBar.tsx` —
   displays good/marginal/poor sensor counts, total sensor count, scale set indicator
   **Refactor prototype file `src/app/App.tsx`** (StatusBar is inline in `AppInner`; extract
   to own component and wire to `useRFPlannerStore`)
   _Acceptance_: StatusBar shows correct counts updating in real time as sensors are placed
   and recalc completes; scale indicator shows "Scale: set" / "Scale: not set"
 
-- [ ] T032 [US4] Add empty-state for coverage — when `project.scale === null`, suppress
+- [X] T032 [US4] Add empty-state for coverage — when `project.scale === null`, suppress
   polygon rendering and show a canvas overlay "Set scale to enable RF calculations"
   **Refactor prototype file `src/app/components/Canvas.tsx`** (new empty state per plan)
   _Acceptance_: No polygons rendered without scale set; overlay visible; polygons appear
