@@ -3,6 +3,7 @@ import { Canvas, CanvasHandle } from '../components/Canvas';
 import { Toolbar } from '../components/Toolbar';
 import { PropertiesPanel } from '../components/PropertiesPanel';
 import { useRFPlannerStore } from '@/stores/rf-planner.store';
+import { useRfEngine } from '../hooks/useRfEngine';
 
 /**
  * Route-level shell for the RF Coverage Planner.
@@ -12,6 +13,9 @@ import { useRFPlannerStore } from '@/stores/rf-planner.store';
 export default function RFPlannerPage() {
   const canvasRef = useRef<CanvasHandle>(null);
   const { project, isDark } = useRFPlannerStore();
+
+  // Start the RF engine worker — subscribes to store and keeps coveragePolygons up to date
+  useRfEngine();
 
   // Apply dark class to document root to drive Tailwind dark: variants
   React.useEffect(() => {

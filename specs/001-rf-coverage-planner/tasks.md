@@ -252,7 +252,7 @@ all 3 sensors green (good RSSI); move sensor far away → tier changes to margin
 
 ### TDD — integration test
 
-- [ ] T025 [US3] Expand `tests/integration/placement-to-heatmap.test.ts` — place 1 gateway +
+- [X] T025 [US3] Expand `tests/integration/placement-to-heatmap.test.ts` — place 1 gateway +
   3 sensors at known positions with known scale → worker returns RSSI values matching manual
   FSPL formula; all 3 sensors assigned to the gateway; no sensor assigned when gateway
   exceeds 30-sensor capacity
@@ -262,7 +262,7 @@ all 3 sensors green (good RSSI); move sensor far away → tier changes to margin
 
 ### Implementation
 
-- [ ] T026 [US3] Implement `src/features/rf-planner/workers/rf-engine.worker.ts` — handles
+- [X] T026 [US3] Implement `src/features/rf-planner/workers/rf-engine.worker.ts` — handles
   `RECALC` message: runs `autoAssignSensors` then `getGatewayCoveragePolygon` for each
   gateway; posts `RECALC_RESULT` with updated sensors array + polygon array
   **New work — no prototype equivalent** (prototype runs `recalcSensors` synchronously on
@@ -271,7 +271,7 @@ all 3 sensors green (good RSSI); move sensor far away → tier changes to margin
   _Acceptance_: Worker compiles; posting a `RECALC` message returns `RECALC_RESULT` with
   correct sensor RSSI values matching manual formula
 
-- [ ] T027 [US3] Implement `src/features/rf-planner/hooks/useRfEngine.ts` — worker lifecycle
+- [X] T027 [US3] Implement `src/features/rf-planner/hooks/useRfEngine.ts` — worker lifecycle
   (init on mount, terminate on unmount), posts `RECALC` after every store project mutation,
   debounce 50ms on mousemove / immediate on click, applies `RECALC_RESULT` to store via
   `setRecalcResult`
@@ -279,7 +279,7 @@ all 3 sensors green (good RSSI); move sensor far away → tier changes to margin
   _Acceptance_: After placing a gateway, a `RECALC` is posted within 50ms; `RECALC_RESULT`
   updates `store.coveragePolygons`; integration test T025 turns green
 
-- [ ] T028 [US3] Implement `place-gateway` and `place-sensor` tool modes in `Canvas.tsx` —
+- [X] T028 [US3] Implement `place-gateway` and `place-sensor` tool modes in `Canvas.tsx` —
   click to place; render gateway/sensor images (`gatewayPng`/`sensorPng`); render ring radii
   as dashed concentric circles (`getRingRadii`); connect `useRfEngine` hook; drag-to-move
   dispatches `MOVE_GATEWAY` / `MOVE_SENSOR` and triggers worker
@@ -288,7 +288,7 @@ all 3 sensors green (good RSSI); move sensor far away → tier changes to margin
   _Acceptance_: Gateway placed; dashed ring halos visible; sensor placed shows RSSI tier colour;
   moving gateway triggers recalculation via worker
 
-- [ ] T029 [US3] Extend `PropertiesPanel.tsx` for hardware — gateway capacity readout
+- [X] T029 [US3] Extend `PropertiesPanel.tsx` for hardware — gateway capacity readout
   (`count/MAX_SENSORS_PER_GATEWAY`), sensor RSSI with colour badge (green ≥ -70, yellow
   -70 to -80, red < -80 dBm), assigned gateway label, editable sensor label + group count
   (dispatches `UPDATE_SENSOR`)

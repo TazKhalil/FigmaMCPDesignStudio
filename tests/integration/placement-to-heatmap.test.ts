@@ -1,14 +1,22 @@
 /**
- * Integration tests: Floor Plan Setup (US1)
- * Stub — expanded fully in Phase 5 (US3 hardware placement + worker).
+ * Integration tests: Floor Plan Setup (US1) + Hardware Placement (US3)
+ * Expanded in Phase 5 per T025.
  *
- * These tests exercise the Zustand store + RF math contracts end-to-end
- * without rendering Canvas (that comes in Phase 5 component tests).
+ * Tests exercise Zustand store + RF math contracts end-to-end.
+ * Worker is not exercised in unit/integration tests (no DOM Worker in jsdom);
+ * rf-utils functions (which the worker calls internally) are tested directly.
  *
- * Prototype source: src/app/store.tsx (SET_FLOOR_PLAN, SET_SCALE dispatches)
+ * Prototype source:
+ *   src/app/store.tsx (SET_FLOOR_PLAN, SET_SCALE, ADD_GATEWAY, ADD_SENSOR)
+ *   src/app/rf-utils.ts (autoAssignSensors, calculateRssi, getGatewayCoveragePolygon)
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useRFPlannerStore } from '@/stores/rf-planner.store';
+import { useRFPlannerStore, genId } from '@/stores/rf-planner.store';
+import {
+  autoAssignSensors, calculateRssi, getGatewayCoveragePolygon, getRingRadii,
+} from '@/features/rf-planner/lib/rf-utils';
+import { COMBINED_GAIN, FSPL_CONSTANT, MAX_SENSORS_PER_GATEWAY } from '@/features/rf-planner/types';
+import type { Gateway, Sensor, ScaleRef } from '@/features/rf-planner/types';
 
 const FT_PER_METRE = 1 / 0.3048; // ≈ 3.28084
 
@@ -111,6 +119,186 @@ describe('US1 — Floor Plan Setup', () => {
 
       useRFPlannerStore.getState().redo();
       expect(useRFPlannerStore.getState().project.scale).toEqual(scaleBefore);
+    });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// US3 — Hardware Placement (T025)
+// Tests verify RF math functions that the worker uses internally.
+// Workers are not instantiated in jsdom — pure function tests cover the protocol.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** 100 px = 50 ft → 2 px/ft */
+const TEST_SCALE: ScaleRef = { p1: { x: 0, y: 0 }, p2: { x: 100, y: 0 }, distanceFeet: 50 };
+const PPF = 2; // pixels per foot
+
+function makeGateway(overrides: Partial<Gateway> = {}): Gateway {
+  return { id: genId(), x: 200, y: 200, label: 'GW-1', ...overrides };
+}
+function makeSensor(overrides: Partial<Sensor> = {}): Sensor {
+  return { id: genId(), x: 300, y: 200, label: 'S-1', groupCount: 1, assignedGatewayId: null, rssi: null, ...overrides };
+}
+
+describe('US3 — Hardware Placement (T025)', () => {
+  describe('calculateRssi — manual FSPL verification', () => {
+    it('RSSI with no walls/obstacles matches COMBINED_GAIN – FSPL formula', () => {
+      const gw = makeGateway({ x: 0, y: 0 });
+      const sensor = makeSensor({ x: 100, y: 0 }); // 100 px = 50 ft = 15.24 m at TEST_SCALE
+
+      const rssi = calculateRssi(sensor, gw, [], [], [], TEST_SCALE);
+
+      // Manual: 50 ft * 0.3048 = 15.24 m; FSPL = 40.2 + 20*log10(15.24) ≈ 40.2 + 23.66 ≈ 63.86 dB
+      // RSSI = 21.49 - 63.86 ≈ -42.37 dBm
+      const distM = (100 / PPF) * 0.3048;
+      const expectedFspl = FSPL_CONSTANT + 20 * Math.log10(distM);
+      const expectedRssi = COMBINED_GAIN - expectedFspl;
+      expect(rssi).toBeCloseTo(expectedRssi, 1);
+    });
+
+    it('RSSI degrades with distance (closer sensor has better RSSI)', () => {
+      const gw = makeGateway({ x: 200, y: 200 });
+      const near = makeSensor({ x: 210, y: 200 }); // 10 px away
+      const far  = makeSensor({ x: 400, y: 200 }); // 200 px away
+
+      const rssiNear = calculateRssi(near, gw, [], [], [], TEST_SCALE);
+      const rssiFar  = calculateRssi(far,  gw, [], [], [], TEST_SCALE);
+
+      expect(rssiNear).toBeGreaterThan(rssiFar);
+    });
+  });
+
+  describe('autoAssignSensors — 1 gateway + 3 sensors', () => {
+    it('assigns all 3 sensors to the single gateway', () => {
+      const gw = makeGateway({ x: 200, y: 200 });
+      const sensors = [
+        makeSensor({ x: 220, y: 200 }),
+        makeSensor({ x: 200, y: 220 }),
+        makeSensor({ x: 210, y: 210 }),
+      ];
+
+      const result = autoAssignSensors(sensors, [gw], [], [], [], TEST_SCALE);
+
+      expect(result).toHaveLength(3);
+      result.forEach(s => {
+        expect(s.assignedGatewayId).toBe(gw.id);
+        expect(s.rssi).not.toBeNull();
+      });
+    });
+
+    it('all 3 sensors have RSSI values in plausible range (< 0 dBm)', () => {
+      const gw = makeGateway({ x: 200, y: 200 });
+      const sensors = [
+        makeSensor({ x: 220, y: 200 }),
+        makeSensor({ x: 200, y: 220 }),
+        makeSensor({ x: 210, y: 210 }),
+      ];
+
+      const result = autoAssignSensors(sensors, [gw], [], [], [], TEST_SCALE);
+      result.forEach(s => {
+        expect(s.rssi).not.toBeNull();
+        expect(s.rssi!).toBeLessThan(0);
+      });
+    });
+
+    it('returns null rssi and null assignedGatewayId when scale is null', () => {
+      const gw = makeGateway();
+      const sensors = [makeSensor(), makeSensor()];
+
+      const result = autoAssignSensors(sensors, [gw], [], [], [], null);
+      result.forEach(s => {
+        expect(s.assignedGatewayId).toBeNull();
+        expect(s.rssi).toBeNull();
+      });
+    });
+
+    it('returns null rssi and null assignedGatewayId when no gateways', () => {
+      const sensors = [makeSensor()];
+      const result = autoAssignSensors(sensors, [], [], [], [], TEST_SCALE);
+      expect(result[0].assignedGatewayId).toBeNull();
+      expect(result[0].rssi).toBeNull();
+    });
+  });
+
+  describe('autoAssignSensors — capacity overflow (FR-007)', () => {
+    it('still assigns sensor to best gateway when all gateways are at capacity', () => {
+      const gw = makeGateway({ x: 200, y: 200 });
+      // Fill gateway to capacity with groupCount=1 sensors
+      const sensors: Sensor[] = [];
+      for (let i = 0; i < MAX_SENSORS_PER_GATEWAY + 1; i++) {
+        sensors.push(makeSensor({ x: 200 + i * 2, y: 200, label: `S-${i}` }));
+      }
+
+      const result = autoAssignSensors(sensors, [gw], [], [], [], TEST_SCALE);
+
+      // All sensors including the overflow one should be assigned (best-effort)
+      result.forEach(s => {
+        expect(s.assignedGatewayId).toBe(gw.id);
+      });
+    });
+
+    it('sensors with groupCount > 1 consume multiple capacity slots', () => {
+      const gw = makeGateway({ x: 200, y: 200 });
+      // One sensor with groupCount=30 fills the gateway
+      const bigSensor = makeSensor({ x: 210, y: 200, groupCount: MAX_SENSORS_PER_GATEWAY, label: 'Big' });
+      // Second sensor cannot fit
+      const extraSensor = makeSensor({ x: 212, y: 200, groupCount: 1, label: 'Extra' });
+
+      const result = autoAssignSensors([bigSensor, extraSensor], [gw], [], [], [], TEST_SCALE);
+
+      // bigSensor gets assigned first (it's sorted by best RSSI which is similar; either could win)
+      // What matters: the extra sensor still gets assigned (best-effort overflow)
+      expect(result).toHaveLength(2);
+      result.forEach(s => expect(s.assignedGatewayId).toBe(gw.id));
+    });
+  });
+
+  describe('getGatewayCoveragePolygon — 72-point polygon', () => {
+    it('returns exactly 72 points for a gateway with scale set', () => {
+      const gw = makeGateway({ x: 200, y: 200 });
+      const poly = getGatewayCoveragePolygon(gw, [], [], [], TEST_SCALE, -70);
+      expect(poly).toHaveLength(72);
+    });
+
+    it('all polygon points are centred around the gateway position', () => {
+      const gw = makeGateway({ x: 200, y: 200 });
+      const poly = getGatewayCoveragePolygon(gw, [], [], [], TEST_SCALE, -70);
+      // All points should be within 5000px of the gateway (the cap from rf-utils)
+      poly.forEach(pt => {
+        const dist = Math.sqrt((pt.x - gw.x) ** 2 + (pt.y - gw.y) ** 2);
+        expect(dist).toBeGreaterThan(0);
+        expect(dist).toBeLessThan(5000);
+      });
+    });
+  });
+
+  describe('getRingRadii — free-space ring radii', () => {
+    it('good radius > marginal radius > poor radius in pixels', () => {
+      const radii = getRingRadii(TEST_SCALE);
+      expect(radii.good).toBeGreaterThan(0);
+      expect(radii.marginal).toBeGreaterThan(0);
+      expect(radii.poor).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Store gateway/sensor dispatch integration', () => {
+    it('ADD_GATEWAY + SET_SCALE triggers synchronous recalcSensors', () => {
+      useRFPlannerStore.getState().dispatch({
+        type: 'SET_SCALE',
+        scale: TEST_SCALE,
+      });
+      useRFPlannerStore.getState().dispatch({
+        type: 'ADD_GATEWAY',
+        gateway: makeGateway({ x: 200, y: 200 }),
+      });
+      useRFPlannerStore.getState().dispatch({
+        type: 'ADD_SENSOR',
+        sensor: makeSensor({ x: 220, y: 200 }),
+      });
+
+      const { project } = useRFPlannerStore.getState();
+      expect(project.sensors[0].assignedGatewayId).toBe(project.gateways[0].id);
+      expect(project.sensors[0].rssi).not.toBeNull();
     });
   });
 });

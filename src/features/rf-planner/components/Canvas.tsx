@@ -7,7 +7,7 @@ import {
   getRssiColor, getRssiTier, MAX_SENSORS_PER_GATEWAY,
 } from '@/features/rf-planner/types';
 import {
-  getPixelsPerFoot, getGatewaySensorCount, getGatewayCoveragePolygon,
+  getPixelsPerFoot, getGatewaySensorCount, getGatewayCoveragePolygon, getRingRadii,
 } from '@/features/rf-planner/lib/rf-utils';
 import gatewayImgSrc from '@/assets/gateway.png';
 import sensorImgSrc from '@/assets/sensor.png';
@@ -584,6 +584,34 @@ export const Canvas = forwardRef<CanvasHandle>((_, ref) => {
           ctx.setLineDash([]);
           ctx.restore();
         }
+      }
+    }
+
+    // Ring radii — dashed concentric circles showing free-space coverage estimate
+    // (T028) Drawn before gateway icons so icons appear on top.
+    if (project.scale) {
+      const radii = getRingRadii(project.scale);
+      for (const gw of project.gateways) {
+        // Good tier (−70 dBm) — green dashed
+        ctx.save();
+        ctx.strokeStyle = 'rgba(22, 163, 74, 0.55)';
+        ctx.lineWidth = 1.5 / zoom;
+        ctx.setLineDash([6 / zoom, 5 / zoom]);
+        ctx.beginPath();
+        ctx.arc(gw.x, gw.y, radii.good, 0, Math.PI * 2);
+        ctx.stroke();
+        // Marginal tier (−80 dBm) — amber dashed
+        ctx.strokeStyle = 'rgba(234, 179, 8, 0.55)';
+        ctx.beginPath();
+        ctx.arc(gw.x, gw.y, radii.marginal, 0, Math.PI * 2);
+        ctx.stroke();
+        // Poor tier (−95 dBm) — red dashed
+        ctx.strokeStyle = 'rgba(220, 38, 38, 0.40)';
+        ctx.setLineDash([4 / zoom, 6 / zoom]);
+        ctx.beginPath();
+        ctx.arc(gw.x, gw.y, radii.poor, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
       }
     }
 

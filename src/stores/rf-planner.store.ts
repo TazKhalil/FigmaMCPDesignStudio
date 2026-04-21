@@ -128,9 +128,20 @@ export interface RFPlannerState {
   _history: ProjectState[];
   _future: ProjectState[];
 
-  // Coverage polygons — populated by worker in Phase 3
-  coveragePolygons: { gatewayId: string; good: { x: number; y: number }[]; marginal: { x: number; y: number }[] }[];
+  // Coverage polygons — populated by RF engine worker (T026/T027)
+  coveragePolygons: {
+    gatewayId: string;
+    good: Point[];
+    marginal: Point[];
+    ringRadii: { goodRadius: number; marginalRadius: number };
+  }[];
   setCoveragePolygons: (polygons: RFPlannerState['coveragePolygons']) => void;
+
+  /** Apply worker RECALC_RESULT: update sensor RSSI/assignment + coverage polygons (no history entry). */
+  setRecalcResult: (
+    sensors: { id: string; assignedGatewayId: string | null; rssi: number | null }[],
+    polygons: RFPlannerState['coveragePolygons'],
+  ) => void;
 }
 
 const HISTORY_LIMIT = 100;
@@ -216,6 +227,19 @@ export const useRFPlannerStore = create<RFPlannerState>((set, get) => ({
   },
 
   setCoveragePolygons: (polygons) => set({ coveragePolygons: polygons }),
+
+  setRecalcResult(sensorResults, polygons) {
+    const { project } = get();
+    const updatedSensors = project.sensors.map(s => {
+      const r = sensorResults.find(sr => sr.id === s.id);
+      return r ? { ...s, assignedGatewayId: r.assignedGatewayId, rssi: r.rssi } : s;
+    });
+    set({
+      project: { ...project, sensors: updatedSensors },
+      coveragePolygons: polygons,
+    });
+    // NOTE: intentionally not added to undo history — worker result is derived data
+  },
 }));
 
 // Re-export types used by consumers
