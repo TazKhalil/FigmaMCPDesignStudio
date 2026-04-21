@@ -78,7 +78,7 @@ component work can begin until the store and RF utilities are functional and uni
 
 ### TDD — write and red-fail tests first (Principle IV)
 
-- [ ] T009 Write `tests/unit/rf-utils.test.ts` covering: `getPixelsPerFoot`, `fspl`,
+- [X] T009 Write `tests/unit/rf-utils.test.ts` covering: `getPixelsPerFoot`, `fspl`,
   `calculateRssi` (known distance, zero walls), RSSI degrades with wall count,
   `autoAssignSensors` assigns to nearest gateway, sensor unassigned when gateway exceeds
   30-sensor capacity, `getRingRadii` returns correct pixel radii at given scale,
@@ -86,33 +86,33 @@ component work can begin until the store and RF utilities are functional and uni
   **Port from prototype `src/app/rf-utils.ts`** (extract expected values from prototype function signatures)
   _Acceptance_: All tests `FAIL` (red) before implementation; `pnpm test` exit non-zero
 
-- [ ] T010 Write `tests/unit/rf-planner.store.test.ts` covering: `ADD_GATEWAY` and
+- [X] T010 Write `tests/unit/rf-planner.store.test.ts` covering: `ADD_GATEWAY` and
   `ADD_SENSOR` dispatches; `DELETE_WALL` cascades to doors; `UNDO`/`REDO` restores and
   re-applies state; history capped at 100 steps; `isDark` persisted to localStorage;
   `scaleInputUnit` toggle between `'ft'` and `'m'`
   **Port from prototype `src/app/store.tsx`** (extract action semantics from reducer)
   _Acceptance_: All tests `FAIL` (red) before implementation
 
-- [ ] T011 Write `tests/unit/storage.test.ts` covering: `saveProject` → `loadProject`
+- [X] T011 Write `tests/unit/storage.test.ts` covering: `saveProject` → `loadProject`
   round-trip produces bit-identical output; corrupt JSON input returns `null` gracefully
   **New work — no prototype equivalent** (prototype has no `StorageAdapter` abstraction)
   _Acceptance_: All tests `FAIL` (red) before implementation
 
 ### Implementation
 
-- [ ] T012 Port `src/features/rf-planner/types/index.ts` from prototype `src/app/types.ts`
+- [X] T012 Port `src/features/rf-planner/types/index.ts` from prototype `src/app/types.ts`
   **Port from prototype file `src/app/types.ts`** — no type changes; field names confirmed correct
   (`distanceFeet`, not `distanceFt`); add `scaleInputUnit: 'ft' | 'm'` to UI state types
   _Acceptance_: `pnpm build` compiles; all 21 `ProjectAction` types present; RF constants present
   (`COMBINED_GAIN=21.49`, `FSPL_CONSTANT=40.2`, `RSSI_GOOD=-70`, `RSSI_MARGINAL=-80`,
   `MAX_SENSORS_PER_GATEWAY=30`)
 
-- [ ] T013 Port `src/features/rf-planner/lib/rf-utils.ts` from prototype `src/app/rf-utils.ts`
+- [X] T013 Port `src/features/rf-planner/lib/rf-utils.ts` from prototype `src/app/rf-utils.ts`
   **Port from prototype file `src/app/rf-utils.ts`** — no algorithmic changes; update imports to
   use `@/features/rf-planner/types`
   _Acceptance_: `tests/unit/rf-utils.test.ts` turns green; `pnpm test` passes
 
-- [ ] T014 Implement `src/stores/rf-planner.store.ts` — Zustand store with all 21
+- [X] T014 Implement `src/stores/rf-planner.store.ts` — Zustand store with all 21
   `ProjectAction` types (migrated from prototype `src/app/store.tsx`), `scaleInputUnit`
   UI state slice (FR-003), undo/redo with 100-step history, `isDark` persisted to
   `localStorage`, `coveragePolygons` result slice for Web Worker output
@@ -121,7 +121,7 @@ component work can begin until the store and RF utilities are functional and uni
   _Acceptance_: `tests/unit/rf-planner.store.test.ts` turns green; store exports
   `useRFPlannerStore`; `canUndo`/`canRedo` flags computed correctly
 
-- [ ] T015 Implement `src/features/rf-planner/lib/storage.ts` — `StorageAdapter` interface
+- [X] T015 Implement `src/features/rf-planner/lib/storage.ts` — `StorageAdapter` interface
   + localStorage implementation (`saveProject`, `loadProject`, `saveTheme`, `loadTheme`)
   **New work — no prototype equivalent** (prototype calls `localStorage` directly in `store.tsx`)
   _Acceptance_: `tests/unit/storage.test.ts` turns green; save + load round-trip verified
