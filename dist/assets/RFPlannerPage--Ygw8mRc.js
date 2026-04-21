@@ -1,0 +1,1 @@
+import{j as e}from"./index-DyyTAy6B.js";function n(){return e.jsx("div",{className:"h-screen w-screen flex items-center justify-center bg-background text-foreground",children:e.jsx("p",{className:"text-sm text-muted-foreground",children:"RF Coverage Planner — coming in Phase 3"})})}export{n as default};
