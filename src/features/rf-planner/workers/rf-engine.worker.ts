@@ -53,6 +53,9 @@ self.addEventListener('message', (e: MessageEvent<RecalcMessage>) => {
   const { sensors, gateways, walls, doors, obstacles, scale } = payload;
 
   try {
+    // T052: measure worker round-trip time for performance benchmarking
+    self.performance.mark('recalc-start');
+
     // 1. Auto-assign sensors → updated sensor list with RSSI + gatewayId
     const updatedSensors = autoAssignSensors(sensors, gateways, walls, doors, obstacles, scale);
 
@@ -75,6 +78,10 @@ self.addEventListener('message', (e: MessageEvent<RecalcMessage>) => {
       : [];
 
     // 3. Post RECALC_RESULT
+    self.performance.mark('recalc-end');
+    const perfMeasure = self.performance.measure('recalc', 'recalc-start', 'recalc-end');
+    console.log(`[rf-worker] RECALC #${requestId} completed in ${perfMeasure.duration.toFixed(2)}ms (${gateways.length} gw, ${sensors.length} sensors, ${walls.length} walls)`);
+
     self.postMessage({
       type: 'RECALC_RESULT',
       requestId,

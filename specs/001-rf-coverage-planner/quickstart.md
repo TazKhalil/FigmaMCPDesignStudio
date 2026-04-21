@@ -157,7 +157,63 @@ migration function in `storage.ts` for any backward-incompatible field changes.
 
 ---
 
-## 7. Prototype Reference
+## 7. Keyboard Accessibility Walkthrough (SC-005 / T051)
+
+Manually complete this checklist in Chrome or Edge **without a mouse** after any
+significant UI change. Mark each item `[X]` when verified.
+
+### Toolbar controls
+
+- [ ] `Tab` from address bar reaches the **New Project** button (first toolbar button)
+- [ ] `Tab` cycles through all toolbar buttons in visual order (left → right, top → bottom)
+- [ ] Every toolbar button shows a **visible focus ring** when focused
+- [ ] `Enter` / `Space` activates the focused toolbar button
+- [ ] **Tool picker** buttons (`Set Scale`, `Draw Wall`, `Gateway`, `Sensor`, etc.) are
+  reachable by `Tab` and toggle correctly with `Enter`
+- [ ] **Undo** button is reachable; `Ctrl+Z` also triggers undo from anywhere in the page
+- [ ] **Redo** button is reachable; `Ctrl+Y` also triggers redo from anywhere in the page
+- [ ] **Dark mode toggle** button is reachable and activates with `Enter`
+
+### Project name
+
+- [ ] `Tab` reaches the editable project name button in the header
+- [ ] `Enter` on the project name button opens the inline `<input>` for editing
+- [ ] `Enter` inside the input commits the name
+- [ ] `Escape` inside the input cancels without saving
+
+### Canvas (keyboard shortcuts — no Tab trapping)
+
+- [ ] `Ctrl+Z` undoes the last action (works without focusing the canvas)
+- [ ] `Ctrl+Y` redoes the last undone action
+- [ ] `Delete` removes the currently selected element (gateway, sensor, or wall)
+- [ ] Canvas does **not** trap keyboard focus — `Tab` moves past it to the Properties Panel
+
+### Properties Panel
+
+- [ ] When a gateway is selected, `Tab` reaches all editable fields in the panel
+- [ ] Label input accepts keyboard input and saves on blur
+- [ ] When a sensor is selected, Group Count input accepts keyboard input
+
+### StatusBar
+
+- [ ] StatusBar text is readable by screen reader (`aria-label` on tier spans)
+- [ ] No interactive elements in StatusBar that could trap focus
+
+### Scale dialog (when open)
+
+- [ ] Dialog input (`#scale-distance-input`) is auto-focused when dialog opens
+- [ ] `Tab` cycles between unit buttons (Feet / Metres) and action buttons (Cancel / Set Scale)
+- [ ] `Enter` on the **Set Scale** button submits the form
+- [ ] `Escape` does **not** close the dialog (dialog uses explicit Cancel button)
+
+### No focus traps
+
+- [ ] At no point is keyboard focus trapped in a region with no exit
+- [ ] Modals / dialogs that open can be dismissed without a mouse
+
+---
+
+## 8. Prototype Reference
 
 The Figma Make prototype is the authoritative UI reference:  
 `https://www.figma.com/make/ZzjCw7mP1LFPjeKqkD5sog/Perceptiv-Design-Studio`

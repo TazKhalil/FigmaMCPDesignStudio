@@ -480,55 +480,55 @@ RF recalculation meets 1-second budget. All five Playwright E2E scenarios passin
 
 **Prototype source files consulted**: None — all new work
 
-- [ ] T045 Write and pass Playwright E2E: "Create & export" flow — new project → upload PNG
+- [X] T045 Write and pass Playwright E2E: "Create & export" flow — new project → upload PNG
   floor plan → set scale (ft) → draw 2 walls → place 1 gateway → place 3 sensors → verify
   RSSI tier colours in StatusBar → export CSV → verify CSV contains 3 rows with non-null RSSI
   `tests/e2e/rf-planner.spec.ts`
   **New work — no prototype equivalent**
   _Acceptance_: `pnpm test:e2e` passes; CSV file presence and row count verified
 
-- [ ] T046 Write and pass Playwright E2E: "Save & reload" flow — complete small plan → Save
+- [X] T046 Write and pass Playwright E2E: "Save & reload" flow — complete small plan → Save
   JSON → reload page → Load JSON → verify good/marginal/poor counts identical to pre-save (SC-004)
   `tests/e2e/rf-planner.spec.ts`
   **New work — no prototype equivalent**
   _Acceptance_: `pnpm test:e2e` passes; RSSI counts unchanged after round-trip
 
-- [ ] T047 [P] Write and pass Playwright E2E: "Undo/redo" flow — place gateway → undo → 0
+- [X] T047 [P] Write and pass Playwright E2E: "Undo/redo" flow — place gateway → undo → 0
   gateways in StatusBar → redo → 1 gateway in StatusBar
   `tests/e2e/rf-planner.spec.ts`
   **New work — no prototype equivalent**
   _Acceptance_: `pnpm test:e2e` passes
 
-- [ ] T048 [P] Write and pass Playwright E2E: "Dark mode persistence" flow — toggle dark →
+- [X] T048 [P] Write and pass Playwright E2E: "Dark mode persistence" flow — toggle dark →
   reload → dark class still on `<html>`
   `tests/e2e/rf-planner.spec.ts`
   **New work — no prototype equivalent**
   _Acceptance_: `pnpm test:e2e` passes; localStorage key persists
 
-- [ ] T049 [P] Write and pass Playwright E2E: "Scale metres" flow — set scale with m toggle →
+- [X] T049 [P] Write and pass Playwright E2E: "Scale metres" flow — set scale with m toggle →
   enter 15 m → StatusBar shows scale set, no RSSI errors
   `tests/e2e/rf-planner.spec.ts`
   **New work — no prototype equivalent**
   _Acceptance_: `pnpm test:e2e` passes; `project.scale.distanceFeet ≈ 49.21`
 
-- [ ] T050 Run axe-playwright accessibility audit on rendered app — fix any WCAG 2.1 AA
+- [X] T050 Run axe-playwright accessibility audit on rendered app — fix any WCAG 2.1 AA
   violations reported (focus rings, ARIA, label associations, colour contrast)
   **New work — no prototype equivalent**
   _Acceptance_: `axe.analyze()` returns 0 critical/serious violations on the main app page
 
-- [ ] T051 [P] Manual keyboard walkthrough (SC-005) — Tab through all toolbar buttons, canvas
+- [X] T051 [P] Manual keyboard walkthrough (SC-005) — Tab through all toolbar buttons, canvas
   shortcuts (Ctrl+Z, Ctrl+Y, Delete), Properties Panel inputs; verify visible focus rings
   **New work — no prototype equivalent**
   _Acceptance_: All interactive controls reachable and operable by keyboard; no focus traps;
   engineer completes the walkthrough checklist in `quickstart.md`
 
-- [ ] T052 [P] Benchmark RF recalculation — measure worker round-trip time with 20 walls +
+- [X] T052 [P] Benchmark RF recalculation — measure worker round-trip time with 20 walls +
   10 gateways + 50 sensors; confirm ≤ 1 000ms (SC-002)
   **New work — no prototype equivalent**
   _Acceptance_: Performance.measure log in worker shows < 1 000ms; screenshot of console output
   committed to `tests/performance/`
 
-- [ ] T053 [P] Cross-browser smoke test — run the "Create & export" E2E scenario in Chrome
+- [X] T053 [P] Cross-browser smoke test — run the "Create & export" E2E scenario in Chrome
   latest and Edge latest (SC-006)
   **New work — no prototype equivalent**
   _Acceptance_: Both browsers complete the scenario without console errors; screenshot artifacts
