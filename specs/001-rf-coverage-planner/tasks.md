@@ -144,7 +144,7 @@ reload → scale preserved and StatusBar shows scale set, no RSSI errors.
 
 ### Implementation
 
-- [ ] T016 [US1] Port `src/features/rf-planner/components/Canvas.tsx` foundation — canvas
+- [X] T016 [US1] Port `src/features/rf-planner/components/Canvas.tsx` foundation — canvas
   element, zoom/pan local state, `useRFPlannerStore` subscription, `requestAnimationFrame`
   render loop, floor plan background image rendering (`floorPlanImg` state, `SET_FLOOR_PLAN`
   dispatch), empty-state overlay (no floor plan / scale not set)
@@ -155,14 +155,14 @@ reload → scale preserved and StatusBar shows scale set, no RSSI errors.
   _Acceptance_: Canvas renders on screen; floor plan PNG displays as background; `<canvas>`
   passes axe ARIA check; empty-state overlay visible when `project.floorPlan === null`
 
-- [ ] T017 [US1] Implement `set-scale` tool mode in `Canvas.tsx` — two-click point selection,
+- [X] T017 [US1] Implement `set-scale` tool mode in `Canvas.tsx` — two-click point selection,
   scale dialog with ft/m unit toggle, metres-to-feet conversion before `SET_SCALE` dispatch
   **Refactor prototype file `src/app/components/Canvas.tsx`** (scale tool exists; add ft/m
   toggle — new work per FR-003 and clarification Q5)
   _Acceptance_: Setting scale with "15 m" input stores `distanceFeet = 49.21` in `ScaleRef`;
   setting with "50 ft" stores `distanceFeet = 50`; StatusBar reflects scale set
 
-- [ ] T018 [US1] Port floor plan upload in `src/features/rf-planner/components/Toolbar.tsx`
+- [X] T018 [US1] Port floor plan upload in `src/features/rf-planner/components/Toolbar.tsx`
   foundation — file upload button (PNG/JPG/PDF), `pdfjs-dist` PDF-to-canvas render
   (page 1 only), dispatches `SET_FLOOR_PLAN`
   **Refactor prototype file `src/app/components/Toolbar.tsx`** — replace `useStore()` with
@@ -170,7 +170,7 @@ reload → scale preserved and StatusBar shows scale set, no RSSI errors.
   _Acceptance_: Uploading a PNG displays it on canvas; uploading a 2-page PDF renders page 1
   only; all toolbar buttons have accessible labels
 
-- [ ] T019 [US1] Write integration test — floor plan upload → SET_FLOOR_PLAN → canvas renders
+- [X] T019 [US1] Write integration test — floor plan upload → SET_FLOOR_PLAN → canvas renders
   image; set scale (ft) → SET_SCALE → `project.scale.distanceFeet` correct;
   set scale (m) → metres converted to feet — `tests/integration/placement-to-heatmap.test.ts`
   (stub test, expanded in Phase 5)
