@@ -7,6 +7,16 @@
 
 ---
 
+## Clarifications
+
+### Session 2026-04-21
+
+- Q: The original request mentioned "-85 dBm flagged as out-of-range", but the prototype defines `RSSI_MARGINAL = -80` dBm. Which threshold wins? → A: Keep -80 dBm (matches prototype constant; no code change needed)- Q: Canvas.tsx renders both dashed concentric rings and a filled directional polygon per gateway simultaneously. Keep both, or drop one? → A: Keep both (matches prototype exactly — dashed rings + filled attenuated polygon)
+- Q: Prototype caps undo at 100 steps (`store.tsx`); spec says "minimum 50". Adopt 100 or keep spec at 50? → A: Keep "minimum 50" as floor (prototype already exceeds it; implementation free to use 100)
+- Q: `SET_NAME` action exists in store but nothing calls it — is an editable project name field in scope for v1? → A: In scope — add click-to-edit project name in header (SET_NAME already wired)
+- Q: Scale dialog uses `distanceFt` field with no unit label. Lock to feet only, or support metres with a toggle? → A: Support both — add ft/m toggle; store internally as feet (convert on input)
+---
+
 ## Prototype Reconciliation
 
 This spec was produced by cross-referencing the requested feature list against the actual
@@ -17,10 +27,10 @@ discrepancies are flagged:
 |---|---------|-----------|
 | P1 | Prototype implements gateway placement generically — no distinction between SR-71 and Universal Gateway models. `Gateway` type has only `id`, `x`, `y`, `label`. | **New work for production**: add `model: 'sr71' \| 'universal'` field to `Gateway`. Flag for confirmation before building. |
 | P2 | Prototype has no PDF export. Export is PNG (canvas snapshot) and BOM CSV only. `Canvas.tsx → exportPng()` and `exportCsv()`. | **New work for production**: PDF report generation. |
-| P3 | Coverage visualization is a directional polygon per gateway drawn on the canvas (`getGatewayCoveragePolygon` in `rf-utils.ts`), not a full RSSI heatmap. Individual sensor RSSI is calculated point-to-point (`calculateRssi`). | Both approaches are in scope. The polygon rendering is already built; the configurable threshold (-85 dBm default) is a production addition. |
+| P3 | Coverage visualization is a directional polygon per gateway drawn on the canvas (`getGatewayCoveragePolygon` in `rf-utils.ts`), not a full RSSI heatmap. Individual sensor RSSI is calculated point-to-point (`calculateRssi`). | Polygon rendering is already built. RSSI tier thresholds locked to prototype values: ≥ -70 dBm good, -70 to -80 dBm marginal, < -80 dBm poor (confirmed in clarification, 2026-04-21). |
 | P4 | Prototype has `draw-wall` and `place-obstacle` tools but no explicit "draw walls on blank canvas" project creation flow. Project starts as "Untitled Project" with null floor plan. | **Prototype implements this** — blank canvas is the default. No divergence. |
 | P5 | Prototype has `DoorType` (`interior`, `steel-fire`) with attenuation constants defined in `types.ts` and door logic in `rf-utils.ts`, but door placement UI is **not implemented** in `Canvas.tsx` or `Toolbar.tsx`. | **New work for production**: door placement tool. Flag for confirmation. |
-| P6 | Prototype has no project naming UI — project is always "Untitled Project". `SET_NAME` action exists in store but nothing calls it. | **New work for production**: project name input on creation. |
+| P6 | Prototype has no project naming UI — project is always "Untitled Project". `SET_NAME` action exists in store but nothing calls it. | **In scope for v1**: add click-to-edit project name field in header (dispatches `SET_NAME`). Confirmed in clarification, 2026-04-21. |
 
 ---
 
@@ -283,7 +293,9 @@ generates a CSV with gateway/sensor/RSSI rows and a summary block.
 - **FR-002**: Users MUST be able to upload a floor plan (PNG, JPG, or PDF) as the canvas
   background. PDF upload MUST render the first page.
 - **FR-003**: Users MUST be able to set a real-world scale reference by selecting two
-  points on the canvas and entering the distance in feet.
+  points on the canvas and entering the distance. The scale dialog MUST provide a ft/m
+  unit toggle. Values entered in metres MUST be converted to feet before storing in
+  `ScaleRef.distanceFt` (confirmed in clarification, 2026-04-21).
 - **FR-004**: Users MUST be able to draw wall segments on the canvas, assigning one of the
   following material types: drywall (3 dB), glass (2 dB), brick (6 dB), concrete (10 dB),
   steel (12 dB).
@@ -299,9 +311,11 @@ generates a CSV with gateway/sensor/RSSI rows and a summary block.
 - **FR-009**: The system MUST calculate estimated RSSI per sensor using free-space path
   loss at 2.44 GHz, accounting for all walls, doors, and obstacles between sensor and
   assigned gateway.
-- **FR-010**: Coverage visualization MUST render a polygon per gateway, per RSSI tier
-  (≥ -70 dBm good, -70 to -80 dBm marginal, < -80 dBm poor), updated on every state
-  change.
+- **FR-010**: Coverage visualization MUST render, per gateway, on every state change: (a) a
+  filled directional polygon per RSSI tier (≥ -70 dBm good, -70 to -80 dBm marginal,
+  < -80 dBm poor) computed via 72-ray raycasting with wall/obstacle attenuation, AND (b)
+  two dashed concentric ring outlines marking the free-space good/marginal radius
+  boundaries (confirmed in clarification, 2026-04-21).
 - **FR-011**: Users MUST be able to select any placed element and view its properties
   (material, length, RSSI, assignment, capacity) in the Properties Panel.
 - **FR-012**: Users MUST be able to edit element properties in the Properties Panel
@@ -317,6 +331,7 @@ generates a CSV with gateway/sensor/RSSI rows and a summary block.
 - **FR-019**: The canvas MUST support pan and zoom (scroll, toolbar zoom buttons, fit-to-
   screen).
 - **FR-020**: The tool MUST support light and dark modes, persisted to local storage.
+- **FR-021**: Users MUST be able to edit the project name via a click-to-edit field in the application header. The name MUST be persisted in project state via the `SET_NAME` action and included in saved `.json` files.
 
 ### Out-of-Scope (this iteration)
 
@@ -328,6 +343,7 @@ generates a CSV with gateway/sensor/RSSI rows and a summary block.
 - Door placement UI (data model exists; UI is new work — to be scheduled separately).
 - Gateway model selection (SR-71 vs. Universal — new work flagged in Prototype
   Reconciliation table).
+- Project naming was previously listed here; moved to in-scope per clarification 2026-04-21 (FR-021).
 
 ### Key Entities
 
@@ -342,7 +358,10 @@ generates a CSV with gateway/sensor/RSSI rows and a summary block.
   sensors.
 - **Sensor**: A point placement with a label, group count, assigned gateway ID, and
   computed RSSI.
-- **ScaleRef**: Two pixel-space points and a real-world distance in feet. Used to convert
+- **ScaleRef**: Two pixel-space points and a real-world distance stored in feet
+  (`distanceFt`). The UI accepts input in feet or metres (user-selectable toggle);
+  metre values are converted to feet before storage. Used to convert pixel distances
+  to metres for FSPL calculations.
   pixel distances to meters for FSPL calculations.
 
 ---
