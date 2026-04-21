@@ -199,7 +199,7 @@ snap-to-vertex, `place-obstacle` mode), `src/app/components/Toolbar.tsx` (materi
 
 ### Implementation
 
-- [ ] T020 [US2] Implement `draw-wall` tool mode in `Canvas.tsx` — two-click wall placement,
+- [X] T020 [US2] Implement `draw-wall` tool mode in `Canvas.tsx` — two-click wall placement,
   snap-to-vertex within 10px, wall rendering with material colour from `WALL_MATERIALS`,
   `ADD_WALL` dispatch on second click
   **Refactor prototype file `src/app/components/Canvas.tsx`** (port existing logic; no
@@ -207,24 +207,24 @@ snap-to-vertex, `place-obstacle` mode), `src/app/components/Toolbar.tsx` (materi
   _Acceptance_: Clicking two canvas points draws a wall; vertex snap activates within 10px;
   wall colour matches `WALL_MATERIALS[material].color`
 
-- [ ] T021 [US2] Implement `place-obstacle` tool mode in `Canvas.tsx` — drag-to-size rectangle,
+- [X] T021 [US2] Implement `place-obstacle` tool mode in `Canvas.tsx` — drag-to-size rectangle,
   `ADD_OBSTACLE` dispatch on mouse-up; obstacle rendered with `OBSTACLE_TYPES[type].color`
   **Refactor prototype file `src/app/components/Canvas.tsx`**
   _Acceptance_: Drag on canvas creates a correctly-sized obstacle rectangle; color matches type
 
-- [ ] T022 [US2] Implement element selection and deletion in `Canvas.tsx` — click to select
+- [X] T022 [US2] Implement element selection and deletion in `Canvas.tsx` — click to select
   wall/obstacle/gateway/sensor (hit-test logic), Delete key dispatches `DELETE_WALL` /
   `DELETE_OBSTACLE` / `DELETE_GATEWAY` / `DELETE_SENSOR`, `DELETE_WALL` cascades to doors
   **Refactor prototype file `src/app/components/Canvas.tsx`**
   _Acceptance_: Selected element highlights; Delete key removes it; `DELETE_WALL` on a wall with
   a door removes the door too (confirmed in prototype `store.tsx`)
 
-- [ ] T023 [US2] Port material-type selector in `Toolbar.tsx` — wall material `<Select>` and
+- [X] T023 [US2] Port material-type selector in `Toolbar.tsx` — wall material `<Select>` and
   obstacle type `<Select>` update `setWallMaterial` / `setObstacleType` in Zustand store
   **Refactor prototype file `src/app/components/Toolbar.tsx`**
   _Acceptance_: Changing material in toolbar before drawing applies that material to next wall
 
-- [ ] T024 [US2] Port `src/features/rf-planner/components/PropertiesPanel.tsx` — selection-
+- [X] T024 [US2] Port `src/features/rf-planner/components/PropertiesPanel.tsx` — selection-
   aware panel showing wall material + computed length in feet, obstacle type; edit dispatches
   `UPDATE_WALL` / `UPDATE_OBSTACLE`; all inputs have associated `<label>` elements
   **Refactor prototype file `src/app/components/PropertiesPanel.tsx`** — replace

@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Canvas, CanvasHandle } from '../components/Canvas';
 import { Toolbar } from '../components/Toolbar';
+import { PropertiesPanel } from '../components/PropertiesPanel';
 import { useRFPlannerStore } from '@/stores/rf-planner.store';
 
 /**
@@ -47,7 +48,7 @@ export default function RFPlannerPage() {
       {/* Main area */}
       <div className="flex flex-1 overflow-hidden">
         <Canvas ref={canvasRef} />
-        {/* PropertiesPanel — added Phase 4 */}
+        <PropertiesPanel />
       </div>
 
       {/* StatusBar */}
